@@ -3,7 +3,6 @@ import scope_cmd
 import dac8554_api
 import time
 import csv
-import json
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -19,12 +18,12 @@ PMT_PERIOD = 1E-3
 PMT_WIDTH = 1E-6
 PMT_RISE_TIME = 10E-9
 PMT_FALL_TIME = 10E-9
-PMT_MEASURE_DELAY = 0
+PMT_MEASURE_DELAY = 0.25
 
-DAC_A = 0xFFFF
-DAC_B = 0xFFFF
-DAC_C = 0xFFFF
-DAC_D = 0xFFFF
+DAC_A = 0x7FFF
+DAC_B = 0x7FFF
+DAC_C = 0x7FFF
+DAC_D = 0x7FFF
 
 
 def prepare_measurement_files(  dac,
@@ -87,14 +86,6 @@ def prepare_measurement_files(  dac,
             writer = csv.writer(csv_file)
             writer.writerow(["sample_index", "time_interval_s"])
 
-            if not config.endswith("\n"):
-                csv_file.write("\n")
-
-            csv_file.write("\n")
-
-            writer = csv.writer(csv_file)
-            writer.writerow(["sample_index", "time_interval_s"])
-
         files[amplitude] = file_path
 
     return output_path, files
@@ -124,10 +115,8 @@ def main():
     oscilloscope.set_amplitude_scale(scope_cmd.OSCILLOSCOPE_TRIGGER_CHANNEL, 0.050) # 50 mV / div
     
     oscilloscope.set_time_scale(5E-9) # 5ns / div
-    
-    oscilloscope.set_trigger(scope_cmd.OSCILLOSCOPE_CFD_OUT_CHANNEL,
-                             edge="RISing",
-                             level="MIDDle")
+
+    oscilloscope.set_trigger(scope_cmd.OSCILLOSCOPE_CFD_OUT_CHANNEL, edge="RISing", level="MIDDle")
     
     oscilloscope.add_time_interval_measurement( scope_cmd.OSCILLOSCOPE_TRIGGER_CHANNEL,
                                                 scope_cmd.OSCILLOSCOPE_CFD_OUT_CHANNEL,

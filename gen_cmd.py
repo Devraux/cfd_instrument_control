@@ -1,6 +1,6 @@
 import pyvisa
 
-GENERATOR_ADDRESS = "TCPIP0::131.29.71.191::inst0::INSTR"
+GENERATOR_ADDRESS = "GPIB0::10::INSTR"
 
 
 class Generator:
