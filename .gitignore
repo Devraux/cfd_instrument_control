@@ -4,3 +4,4 @@ doc/
 measurements_data/
 *.pyi
 EOF
+.vscode/settings.json
