@@ -1,6 +1,6 @@
 import pyvisa
 
-GENERATOR_ADDRESS = "GPIB0::10::INSTR"
+GENERATOR_ADDRESS = "GPIB0::11::INSTR"
 
 
 class Generator:
@@ -19,15 +19,12 @@ class Generator:
             self.rm.close()
             raise
 
-    def enable_trigger(self, channel):
-        self.generator.write(f"SOUR{channel}:FUNC SQUare")
-        self.generator.write(f"SOUR{channel}:FREQ 1000")
-        self.generator.write(f"SOUR{channel}:VOLT:HIGH 5")
-        self.generator.write(f"SOUR{channel}:VOLT:LOW 0")
-        self.generator.write(f"OUTP{channel} ON")
+    def enable_trigger(self):
+        self.generator.write("OUTPut:TRIGger:MODE TRIGger")
 
-    def disable_trigger(self, channel):
-        self.generator.write(f"OUTP{channel} OFF")
+    def disable_trigger(self):
+        pass
+        #TODO self.generator.write("OUTPut:TRIGger:MODE SYNC")
 
     def set_channel_impedance_50(self, channel):
         self.generator.write(f"OUTP{channel}:IMP 50")

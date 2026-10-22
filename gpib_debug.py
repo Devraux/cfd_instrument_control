@@ -1,55 +1,57 @@
+
 import pyvisa
 
-def scan_gpib():
-    rm = pyvisa.ResourceManager()
-    found_devices = []
+GENERATOR_ADDRESS = "GPIB0::7::INSTR"
+OSCILLOSCOPE_ADDRESS = "GPIB0::11::INSTR"
+
+
+def check_device(rm, name, address):
+    print(f"\nChecking {name}: {address}")
 
     try:
-        print("Scanning GPIB bus ...")
+        instrument = rm.open_resource(address)
 
-        for address in range(31):
-            resource = f"GPIB0::{address}::INSTR"
-            instrument = None
+        try:
+            instrument.timeout = 3000
+            instrument.read_termination = "\n"
+            instrument.write_termination = "\n"
+
+            print("[OK] Resource opened successfully.")
 
             try:
-                instrument = rm.open_resource(resource)
-                instrument.timeout = 1000
-                instrument.read_termination = "\n"
-                instrument.write_termination = "\n"
+                identification = instrument.query("*IDN?").strip()
+                print(f"[OK] Identification: {identification}")
+            except Exception as error:
+                print(f"[WARNING] Resource opened, but *IDN? failed: {error}")
 
-                try:
-                    identification = instrument.query("*IDN?").strip()
-                except Exception:
-                    identification = "No response to *IDN?"
+        finally:
+            instrument.close()
 
-                found_devices.append(
-                    {
-                        "address": address,
-                        "resource": resource,
-                        "identification": identification,
-                    })
+    except Exception as error:
+        print(f"[ERROR] Cannot open resource: {error}")
 
-                print(f"[FOUND] Address {address}: {identification}")
 
-            except Exception:
-                pass
+def main():
+    try:
+        rm = pyvisa.ResourceManager()
 
-            finally:
-                if instrument is not None:
-                    instrument.close()
+        try:
+            print("VISA backend:")
+            print(rm.visalib)
 
-        print("--- Scan summary ---")
+            print("\nVISA resources detected:")
+            resources = rm.list_resources()
+            print(resources if resources else "No resources listed.")
 
-        if found_devices:
-            print(f"Found {len(found_devices)} responding GPIB addresses.")
-        else:
-            print("No responding devices found.")
-            
-        return found_devices
+            check_device(rm, "Generator", GENERATOR_ADDRESS)
+            check_device(rm, "Oscilloscope", OSCILLOSCOPE_ADDRESS)
 
-    finally:
-        rm.close()
+        finally:
+            rm.close()
+
+    except Exception as error:
+        print(f"[FATAL] Cannot initialize VISA: {error}")
 
 
 if __name__ == "__main__":
-    scan_gpib()
+    main()

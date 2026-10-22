@@ -22,11 +22,18 @@ class dac8554_api:
         self.serial = serial.Serial(port, PICO_BAUDRATE, timeout=1)
         self.serial.read_until(b"DAC> ")
 
+    
     def send(self, command):
         self.serial.write((command + "\n").encode())
         self.serial.flush()
 
-        return self.serial.read_until(b"DAC> ").decode(errors="replace")
+        response = self.serial.read_until(b"DAC> ").decode(errors="replace")
+
+        if response.endswith("DAC> "):
+            response = response[:-len("DAC> ")]
+
+        return response
+
 
     def write_single(self, inst, channel, value):
         if inst < 0 or inst > 2:
