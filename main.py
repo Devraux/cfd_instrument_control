@@ -8,11 +8,10 @@ from decimal import Decimal
 from pathlib import Path
 
 # Measurement parameters
-PMT_PULSES_COUNT = 100 # Number of pulses to be measured
 PMT_AMPLITUDE_MIN = -2 # Min pmt amplitude
 PMT_AMPLITUDE_MAX = -0.5 # Max pmt amplitude
 PMT_AMPLITUDE_RESOLUTION = 0.1 # Amplitude increase value resolution
-PMT_AMPLITUDE_SAMPLE_NUMBER = 100 # Number of samples measured for picked amplitude
+PMT_AMPLITUDE_SAMPLE_NUMBER = 1000 # Number of samples measured for picked amplitude
 PMT_OUTPUT_DIR = "./measurements_data"
 PMT_PERIOD = 1E-6
 PMT_WIDTH = 200E-9
@@ -110,19 +109,23 @@ def main():
 
     # Configure Oscilloscope
     oscilloscope.enable_channel(1, True) 
+    oscilloscope.enable_channel(2, True) 
+    oscilloscope.enable_channel(3, True) 
     oscilloscope.enable_channel(4, True)   
     
-    # oscilloscope.set_amplitude_scale(scope_cmd.OSCILLOSCOPE_CFD_OUT_CHANNEL, 0.200) # 200mV / div
-    # oscilloscope.set_amplitude_scale(scope_cmd.OSCILLOSCOPE_TRIGGER_CHANNEL, 0.050) # 50 mV / div
+    oscilloscope.set_amplitude_scale(1, 0.200) # 200mV / div
+    oscilloscope.set_amplitude_scale(2, 0.200) # 50 mV / div
+    oscilloscope.set_amplitude_scale(3, 0.200) # 200mV / div
+    oscilloscope.set_amplitude_scale(4, 0.050) # 50 mV / div
     
-    # oscilloscope.set_time_scale(5E-9) # 5ns / div
+    oscilloscope.set_time_scale(5E-9) # 5ns / div
 
-    # oscilloscope.set_trigger(scope_cmd.OSCILLOSCOPE_CFD_OUT_CHANNEL, edge="RISing", level="MIDDle")
+    oscilloscope.set_trigger(4, edge="RISing", level="MIDDle")
     
-    oscilloscope.add_time_interval_measurement( 1,
-                                                4,
+    oscilloscope.add_time_interval_measurement( 4,
+                                                3,
                                                 start_edge="RISing",
-                                                stop_edge="RISing",
+                                                stop_edge="RISing", 
                                                 start_edge_number=1,
                                                 stop_edge_number=1,
                                                 start_position="MIDDle",
@@ -130,10 +133,8 @@ def main():
     
     # Configure generator
     generator.enable_trigger()
-    # generator.set_channel_impedance_50(channel=1)
-
-
-    delay = PMT_DELAY
+    generator.set_polarization(channel=1, polarization="INVERTED")
+    
     # Measurement loop
     for amplitude in files:
         amplitude_value = float(amplitude)
@@ -145,9 +146,7 @@ def main():
                                             low=amplitude_value,
                                             rise_time=PMT_RISE_TIME,
                                             fall_time=PMT_FALL_TIME,
-                                            delay=delay)
-
-        delay = delay + 10e-9
+                                            delay=PMT_DELAY)
 
         for j in range(PMT_AMPLITUDE_SAMPLE_NUMBER):
             time_interval = oscilloscope.get_time_interval_measurement()

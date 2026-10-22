@@ -48,7 +48,13 @@ class Oscilloscope:
 
         self.scope.write(f":TRIGger:EDGE:SOURce CHANnel{channel}")
         self.scope.write(f":TRIGger:EDGE:SLOPe {slope}")
-        self.scope.write(f":TRIGger:LEVel {level}")
+        self.scope.write(f":TRIGger:LEVel CHANnel{channel},{level}")
+
+    def set_vertical_offset(self, channel, value):
+        self.scope.write(f":CHANnel{channel}:OFFSet {value}")
+
+    def set_horizontal_offset(self, value):
+        self.scope.write(f":TIMebase:POSition {value}")
 
     def close(self):
         if self.scope is not None:

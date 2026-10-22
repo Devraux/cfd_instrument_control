@@ -70,8 +70,17 @@ class Generator:
 
         self.generator.write(f"OUTPut{channel} ON")
 
+    def set_polarization(self, channel, polarization):
+        polarization = polarization.upper()
+
+        if polarization not in ("NORMAL", "INVERTED"):
+            raise ValueError("polarization must be 'NORMAL' or 'INVERTED'")
+
+        polarity = "NORMal" if polarization == "NORMAL" else "INVerted"
+        self.generator.write(f"OUTPut{channel}:POLarity {polarity}")  
+
     def disable_channel(self, channel):
-        self.generator.write(f"OUTP{channel} OFF")
+        self.generator.write(f"OUTP{channel} OFF")        
 
     def close(self):
         if self.generator:
