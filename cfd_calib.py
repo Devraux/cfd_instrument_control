@@ -1,6 +1,5 @@
 
 import csv
-import time
 
 PMT_PERIOD = 1E-5
 PMT_WIDTH = 8.2E-9
@@ -39,7 +38,7 @@ def calibrate( dac_obj, generator_obj, oscilloscope_obj, output_path, dac_start_
         results = {}
 
         for amplitude_value in PMT_AMPLITUDES:
-            print(f"PMT amplitude {amplitude_value}")
+        
             # Configure the generator for the selected PMT amplitude.
             generator_obj.generate_continuous_pulse(channel=1,
                                                     amplitude=abs(amplitude_value),
@@ -49,10 +48,8 @@ def calibrate( dac_obj, generator_obj, oscilloscope_obj, output_path, dac_start_
                                                     rise_time=PMT_RISE_TIME,
                                                     fall_time=PMT_FALL_TIME,
                                                     delay=PMT_DELAY)
-            time.sleep(0.04)
             # Iterate through all DAC codes.
             for dac_code in range(dac_start_code, dac_stop_code + 1, 100):
-                print(f"DAC value: {dac_code}")
                 # Set the DAC value.
                 dac_obj.write_single(
                     inst=0,
@@ -68,7 +65,7 @@ def calibrate( dac_obj, generator_obj, oscilloscope_obj, output_path, dac_start_
                     results[dac_code] = []
 
                 results[dac_code].append(time_interval)
-                time.sleep(0.04)
+    
 
         # Write all results to the CSV file.
         for dac_code in range(dac_start_code, dac_stop_code + 1, 100):
