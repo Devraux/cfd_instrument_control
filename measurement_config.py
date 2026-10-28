@@ -1,8 +1,10 @@
+from pathlib import Path
+import sys
+
 PMT_AMPLITUDE_MIN = -2.0
 PMT_AMPLITUDE_MAX = -0.5
 PMT_AMPLITUDE_RESOLUTION = 0.1
 PMT_AMPLITUDE_SAMPLE_NUMBER = 100
-PMT_OUTPUT_DIR = "./measurements_data"
 
 PMT_PERIOD = 1E-5
 PMT_DELAY = 3.5E-9
@@ -30,3 +32,13 @@ LOG_MEASURE_ENABLE = False
 POINTS_PER_DECADE = 10
 
 HEX_FORMAT = True  # True = HEX, False = DEC
+
+PMT_OUTPUT_DIR = "./measurements_data"
+
+# .EXE final version important change
+# if getattr(sys, "frozen", False):
+#     APP_DIR = Path(sys.executable).resolve().parent
+# else:
+#     APP_DIR = Path(__file__).resolve().parent.parent
+
+# PMT_OUTPUT_DIR = str(APP_DIR / "measurements_data")

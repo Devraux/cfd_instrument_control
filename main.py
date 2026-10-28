@@ -15,6 +15,10 @@ from instrument_control import scope_cmd
 import measurement_config as config
 from tkinter import messagebox
 
+# .EXE final version important change
+#DATA_DIR = Path(config.PMT_OUTPUT_DIR).resolve()
+#DATA_DIR.mkdir(parents=True, exist_ok=True)
+
 DATA_DIR = (Path(__file__).resolve().parent / "measurements_data")
 current_session_folder = None
 results_notebook = None
@@ -195,8 +199,7 @@ def add_setup_tab(notebook):
         ("DAC_A", "TEST_POINT", config.DAC_A),
         ("DAC_B", "DRV_OFFSET", config.DAC_B),
         ("DAC_C", "CFD_ZERO", config.DAC_C),
-        ("DAC_D", "CFD_TH", config.DAC_D)
-    ]
+        ("DAC_D", "CFD_TH", config.DAC_D)]
 
     dac_entries = {}
 
@@ -229,10 +232,7 @@ def add_setup_tab(notebook):
             return
 
         try:
-            values = {
-                name: int( entry.get().strip(), 16 if old_format == "HEX" else 10)
-                for name, entry in dac_entries.items()
-            }
+            values = { name: int( entry.get().strip(), 16 if old_format == "HEX" else 10) for name, entry in dac_entries.items()}
             
         except ValueError:
             messagebox.showerror("Invalid DAC value",f"Please enter valid {old_format} values in all DAC fields.")
