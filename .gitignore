@@ -5,3 +5,4 @@ measurements_data/
 *.pyi
 EOF
 .vscode/settings.json
+gui_test.py

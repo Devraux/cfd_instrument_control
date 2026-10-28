@@ -7,7 +7,8 @@ from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+
 
 
 DATA_DIR = Path("./measurements_data")
@@ -27,7 +28,6 @@ def find_latest_measurement_folder(data_dir):
 
     return max(folders, key=lambda path: path.stat().st_mtime)
 
-
 def format_measurement_name(name):
     match = re.search(r"(\d{2})\.(\d{2})\.(\d{4})_(\d{2})_(\d{2})_(\d{2})$", name )
 
@@ -36,7 +36,6 @@ def format_measurement_name(name):
         return f"{day}.{month}.{year} {hour}:{minute}:{second}"
 
     return name
-
 
 def read_measurement_csv(file_path):
     sample_indices = []
@@ -73,7 +72,6 @@ def read_measurement_csv(file_path):
 
     return sample_indices, time_intervals_ns
 
-
 def read_summary_csv(file_path, value_column):
     amplitudes = []
     values = []
@@ -104,7 +102,6 @@ def read_summary_csv(file_path, value_column):
         np.array(amplitudes)[order],
         np.array(values)[order]
     )
-
 
 def read_generic_csv(file_path):
 
@@ -160,7 +157,6 @@ def read_generic_csv(file_path):
             return headers, data_rows, columns
 
     return None, None, None
-
 
 def add_cfd_out_tab(notebook, session_folder):
     frame = ttk.Frame(notebook)
@@ -223,6 +219,8 @@ def add_cfd_out_tab(notebook, session_folder):
 
     canvas = FigureCanvasTkAgg(fig, master=frame)
     canvas.draw()
+    toolbar = NavigationToolbar2Tk(canvas, frame)
+    toolbar.update()
     canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
     
 
@@ -313,8 +311,7 @@ def add_cfd_out_tab(notebook, session_folder):
                 )
             )
 
-def add_summary_tab(notebook, session_folder, title, subfolder, filename,
-                    value_column, y_label):
+def add_summary_tab(notebook, session_folder, title, subfolder, filename, value_column, y_label):
     frame = ttk.Frame(notebook)
     notebook.add(frame, text=title)
 
@@ -329,15 +326,13 @@ def add_summary_tab(notebook, session_folder, title, subfolder, filename,
             amplitudes,
             values,
             marker="o",
-            linestyle="-"
-        )
+            linestyle="-")
     else:
         ax.text(
             0.5, 0.5,
             f"No valid data found\n{file_path}",
             ha="center", va="center",
-            transform=ax.transAxes
-        )
+            transform=ax.transAxes)
 
     ax.set_title(title)
     ax.set_xlabel("Amplitude (V)")
@@ -346,8 +341,9 @@ def add_summary_tab(notebook, session_folder, title, subfolder, filename,
 
     canvas = FigureCanvasTkAgg(fig, master=frame)
     canvas.draw()
+    toolbar = NavigationToolbar2Tk(canvas, frame)
+    toolbar.update()
     canvas.get_tk_widget().pack( side=tk.TOP, fill=tk.BOTH, expand=True)
-
 
 def add_calibration_tab(notebook, session_folder):
     frame = ttk.Frame(notebook)
@@ -400,8 +396,13 @@ def add_calibration_tab(notebook, session_folder):
 
     canvas = FigureCanvasTkAgg(fig, master=frame)
     canvas.draw()
+    toolbar = NavigationToolbar2Tk(canvas, frame)
+    toolbar.update()
     canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
+def add_setup_tab(notebook, ):
+    frame = ttk.Frame(notebook)
+    notebook.add(frame, text="Measurement setup")
 
 def main():
     if not DATA_DIR.is_dir():
@@ -414,9 +415,7 @@ def main():
     print(f"Reading measurements from: {session_folder.resolve()}")
 
     root = tk.Tk()
-    root.title(
-        f"Measurement Results - {format_measurement_name(session_folder.name)}"
-    )
+    root.title(f"Measurement Results - {format_measurement_name(session_folder.name)}")
 
     try:
         root.state("zoomed")
@@ -426,6 +425,7 @@ def main():
     notebook = ttk.Notebook(root)
     notebook.pack(fill=tk.BOTH, expand=True)
 
+    add_setup_tab(notebook,)
     add_calibration_tab(notebook, session_folder)
     add_cfd_out_tab(notebook, session_folder)
 
@@ -436,8 +436,7 @@ def main():
         subfolder="mean",
         filename="mean_vs_amplitude.csv",
         value_column="mean_time_interval_s",
-        y_label="Mean time interval [s]"
-    )
+        y_label="Mean time interval [s]")
 
     add_summary_tab(
         notebook,
@@ -460,7 +459,6 @@ def main():
                 fig.canvas.draw_idle()
 
     root.mainloop()
-
 
 if __name__ == "__main__":
     main()
