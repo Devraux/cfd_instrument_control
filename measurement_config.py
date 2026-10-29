@@ -1,10 +1,15 @@
 from pathlib import Path
 import sys
 
-PMT_AMPLITUDE_MIN = -2.0
-PMT_AMPLITUDE_MAX = -0.5
+PMT_AMPLITUDE_MIN = 0.5
+PMT_AMPLITUDE_MAX = 2.0
 PMT_AMPLITUDE_RESOLUTION = 0.1
 PMT_AMPLITUDE_SAMPLE_NUMBER = 100
+
+PMT_AMPLITUDE_1 = 0.2
+PMT_AMPLITUDE_2 = 0.4
+PMT_AMPLITUDE_3 = 2.0
+PMT_AMPLITUDES = [PMT_AMPLITUDE_1, PMT_AMPLITUDE_2, PMT_AMPLITUDE_3]
 
 PMT_PERIOD = 1E-5
 PMT_DELAY = 3.5E-9
@@ -20,11 +25,6 @@ DAC_INCREMENT_STEP = 1000
 DAC_SAMPLES_PER_POINT = 100
 DAC_INSTANCE = 0
 DAC_SETTLING_DELAY = 10E-3 # Time between setting DAC value and reading first timing value
-
-PMT_AMPLITUDE_1 = -0.2
-PMT_AMPLITUDE_2 = -0.4
-PMT_AMPLITUDE_3 = -2.0
-PMT_AMPLITUDES = [PMT_AMPLITUDE_1, PMT_AMPLITUDE_2, PMT_AMPLITUDE_3]
 
 DAC_A = 0x7FFF # Test point
 DAC_B = 0x7FFF
@@ -43,5 +43,4 @@ PMT_OUTPUT_DIR = "./measurements_data"
 #     APP_DIR = Path(sys.executable).resolve().parent
 # else:
 #     APP_DIR = Path(__file__).resolve().parent.parent
-
 # PMT_OUTPUT_DIR = str(APP_DIR / "measurements_data")

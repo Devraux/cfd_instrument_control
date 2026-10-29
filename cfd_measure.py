@@ -7,10 +7,13 @@ import math
 import numpy as np
 import measurement_config as config
 
+
 def generate_amplitudes(amplitude_min, amplitude_max, amplitude_resolution):
     if not config.LOG_MEASURE_ENABLE:
         amplitudes = []
-        amplitude = amplitude_min
+        amplitude = Decimal(str(amplitude_min))
+        amplitude_max = Decimal(str(amplitude_max))
+        amplitude_resolution = Decimal(str(amplitude_resolution))
 
         while amplitude <= amplitude_max:
             amplitudes.append(amplitude)
@@ -22,7 +25,7 @@ def generate_amplitudes(amplitude_min, amplitude_max, amplitude_resolution):
     maximum = abs(float(amplitude_max))
 
     if minimum <= 0 or maximum <= 0:
-        raise ValueError("Pseudo-logarithmic characterization requires non-zero amplitude limits." )
+        raise ValueError("Logarithmic characterization requires non-zero amplitude limits.")
 
     lower = min(minimum, maximum)
     upper = max(minimum, maximum)
@@ -45,9 +48,11 @@ def generate_amplitudes(amplitude_min, amplitude_max, amplitude_resolution):
                 amplitudes.add(round(value, 12))
 
         decade *= 10
+
+    amplitudes.add(round(lower, 12))
     amplitudes.add(round(upper, 12))
 
-    return sorted((Decimal(str(-value)) for value in amplitudes), reverse=True)
+    return sorted(Decimal(str(value)) for value in amplitudes)
 
 def prepare_measurement_files(dac):
     timestamp = datetime.now().strftime("%d.%m.%Y_%H_%M_%S")
@@ -135,7 +140,7 @@ def cfd_calibrate(dac_obj, generator_obj, oscilloscope_obj, output_path, refresh
                                                     amplitude=abs(amplitude_value),
                                                     period=config.PMT_PERIOD,
                                                     width=config.PMT_WIDTH,
-                                                    low=amplitude_value,
+                                                    low=-abs(amplitude_value),
                                                     rise_time=config.PMT_RISE_TIME,
                                                     fall_time=config.PMT_FALL_TIME,
                                                     delay=config.PMT_DELAY)
@@ -204,7 +209,7 @@ def cfd_characterize(dac_obj, generator_obj, oscilloscope_obj,  files,  output_p
                                                 amplitude=abs(amplitude_value),
                                                 period=config.PMT_PERIOD,
                                                 width=config.PMT_WIDTH,
-                                                low=amplitude_value,
+                                                low=-abs(amplitude_value),
                                                 rise_time=config.PMT_RISE_TIME,
                                                 fall_time=config.PMT_FALL_TIME,
                                                 delay=config.PMT_DELAY)
