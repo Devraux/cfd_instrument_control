@@ -219,6 +219,18 @@ def add_setup_tab(notebook):
         label = item[5] if len(item) > 5 else name
         parameters[name] = add_parameter(pmt_frame, label, default, unit, row, column)
 
+    # PMT polarity invert checkbox
+    pmt_polarity_invert_var = tk.BooleanVar(value=config.PMT_POLARITY_INVERT)
+
+    def update_pmt_polarity_invert():
+        config.PMT_POLARITY_INVERT = pmt_polarity_invert_var.get()
+
+    polarity_frame = ttk.Frame(pmt_frame)
+    polarity_frame.grid( row=0, column=4, sticky="n", padx=3, pady=3)
+
+    ttk.Label( polarity_frame, text="PMT_POLARITY_INVERT", anchor="center").pack(fill=tk.X)
+    ttk.Checkbutton( polarity_frame, variable=pmt_polarity_invert_var, command=update_pmt_polarity_invert).pack(pady=(5, 0))
+
     additional_frame = ttk.LabelFrame(left, text="CFD calibration additional parameters", padding=8)
     additional_frame.grid(row=2, column=0, sticky="ew", pady=(12, 0))
 

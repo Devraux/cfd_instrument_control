@@ -136,14 +136,25 @@ def cfd_calibrate(dac_obj, generator_obj, oscilloscope_obj, output_path, refresh
         for amplitude_value in config.PMT_AMPLITUDES:
 
             # Configure the generator for the selected PMT amplitude.
+            amplitude_abs = abs(amplitude_value)
+
+            if config.PMT_POLARITY_INVERT:
+                generator_low = 0.0
+                generator_polarity = "NORMAL"
+            else:
+                generator_low = -amplitude_abs
+                generator_polarity = "INVERTED"
+
             generator_obj.generate_continuous_pulse(channel=1,
-                                                    amplitude=abs(amplitude_value),
+                                                    amplitude=amplitude_abs,
                                                     period=config.PMT_PERIOD,
                                                     width=config.PMT_WIDTH,
-                                                    low=-abs(amplitude_value),
+                                                    low=generator_low,
                                                     rise_time=config.PMT_RISE_TIME,
                                                     fall_time=config.PMT_FALL_TIME,
                                                     delay=config.PMT_DELAY)
+
+            generator_obj.set_polarization( channel=1, polarization=generator_polarity)
             
             print(f"CFD calibrate, amplitude: {amplitude_value}")
             time.sleep(config.PMT_SETTLING_TIME)
@@ -204,15 +215,27 @@ def cfd_characterize(dac_obj, generator_obj, oscilloscope_obj,  files,  output_p
     # Measurement loop
     for amplitude in files:
         amplitude_value = float(amplitude)
-        
+
+        # Configure the generator for the selected PMT amplitude.
+        amplitude_abs = abs(amplitude_value)
+
+        if config.PMT_POLARITY_INVERT:
+            generator_low = 0.0
+            generator_polarity = "NORMAL"
+        else:
+            generator_low = -amplitude_abs
+            generator_polarity = "INVERTED"
+
         generator_obj.generate_continuous_pulse(channel=1,
-                                                amplitude=abs(amplitude_value),
+                                                amplitude=amplitude_abs,
                                                 period=config.PMT_PERIOD,
                                                 width=config.PMT_WIDTH,
-                                                low=-abs(amplitude_value),
+                                                low=generator_low,
                                                 rise_time=config.PMT_RISE_TIME,
                                                 fall_time=config.PMT_FALL_TIME,
                                                 delay=config.PMT_DELAY)
+
+        generator_obj.set_polarization( channel=1, polarization=generator_polarity)
         
         print(f"CFD characterize, amplitude: {amplitude_value}")
 
@@ -468,4 +491,3 @@ def configure_instruments(dac_obj, generator_obj, oscilloscope_obj):
     
     # Configure generator
     generator_obj.enable_trigger()
-    generator_obj.set_polarization(channel=1, polarization="INVERTED")
