@@ -18,10 +18,10 @@ import sys
 import queue
 
 # .EXE final version important change
-#DATA_DIR = Path(config.PMT_OUTPUT_DIR).resolve()
-#DATA_DIR.mkdir(parents=True, exist_ok=True)
+DATA_DIR = Path(config.PMT_OUTPUT_DIR).resolve()
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+# DATA_DIR = (Path(__file__).resolve().parent / "measurements_data")
 
-DATA_DIR = (Path(__file__).resolve().parent / "measurements_data")
 current_session_folder = None
 results_notebook = None
 cfd_zero_calibration_value = (0, 0)
@@ -386,12 +386,12 @@ def add_setup_tab(notebook):
 
 def find_latest_measurement_folder(data_dir=DATA_DIR):
     if not data_dir.is_dir():
-        raise FileNotFoundError(f"Measurement directory not found: {data_dir.resolve()}")
+        return None
 
     folders = [ path for path in data_dir.iterdir() if path.is_dir() and ( (path / "cfd_out").is_dir() or (path / "calibration").is_dir())]
 
     if not folders:
-        raise FileNotFoundError(f"No measurement session folders found in: {data_dir.resolve()}")
+        return None
 
     return max(folders, key=lambda path: path.stat().st_mtime)
 
