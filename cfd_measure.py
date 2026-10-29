@@ -146,7 +146,7 @@ def cfd_calibrate(dac_obj, generator_obj, oscilloscope_obj, output_path, refresh
             # Iterate through selected DAC codes.
             for dac_code in range( config.DAC_START_CODE, config.DAC_STOP_CODE + 1, config.DAC_INCREMENT_STEP):
                 # Set the DAC value.
-                dac_obj.write_single( inst=0,
+                dac_obj.write_single( inst=config.DAC_INSTANCE,
                                       channel="CFD_ZERO",
                                       value=dac_code )
 
@@ -192,7 +192,7 @@ def cfd_calibrate(dac_obj, generator_obj, oscilloscope_obj, output_path, refresh
 def cfd_characterize(dac_obj, generator_obj, oscilloscope_obj,  files,  output_path, refresh_console=None):
     
     # Set dac output voltages:
-    dac_obj.write_all(0, config.DAC_A, config.DAC_B, config.DAC_C, config.DAC_D)
+    dac_obj.write_all(config.DAC_INSTANCE, config.DAC_A, config.DAC_B, config.DAC_C, config.DAC_D)
     
     time.sleep(config.DAC_SETTLING_DELAY)
     increment_counter = 0

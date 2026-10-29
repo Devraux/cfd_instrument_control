@@ -117,6 +117,8 @@ def update_parameters(parameters, dac_entries):
 
     config.PMT_AMPLITUDES = [config.PMT_AMPLITUDE_1, config.PMT_AMPLITUDE_2, config.PMT_AMPLITUDE_3]
 
+    config.DAC_INSTANCE = int(parameters["DAC_INSTANCE"].get())
+
 def update_dac_entry(dac_entries, name, value):
     entry = dac_entries[name]
     entry.delete(0, tk.END)
@@ -194,29 +196,46 @@ def add_setup_tab(notebook):
     left.grid(row=0, column=0, sticky="nsew", padx=(0, 10))
     left.columnconfigure(0, weight=1)
 
+    # DAC instance selector
+    dac_instance_frame = ttk.LabelFrame(left, text="DAC instance", padding=8)
+    dac_instance_frame.grid(row=0, column=0, sticky="ew", pady=(0, 12))
+
+    dac_instance_var = tk.StringVar(value=str(config.DAC_INSTANCE))
+    dac_instance_selector = ttk.Combobox(dac_instance_frame, textvariable=dac_instance_var, values=("0", "1", "2"), state="readonly", width=8, justify=tk.CENTER)
+    dac_instance_selector.pack(anchor="w")
+
+    def change_dac_instance(event=None):
+        config.DAC_INSTANCE = int(dac_instance_var.get())
+
+    dac_instance_selector.bind("<<ComboboxSelected>>", change_dac_instance)
+
     pmt_frame = ttk.LabelFrame(left, text="PMT signal parameters", padding=8)
-    pmt_frame.grid(row=0, column=0, sticky="ew")
+    pmt_frame.grid(row=1, column=0, sticky="ew")
 
     for column in range(3):
         pmt_frame.columnconfigure(column, weight=1)
 
     parameters = {}
 
+    parameters["DAC_INSTANCE"] = dac_instance_var
+
     pmt_parameters = [  ("PMT_AMPLITUDE_MIN", str(config.PMT_AMPLITUDE_MIN), "V", 0, 0),
                         ("PMT_AMPLITUDE_MAX", str(config.PMT_AMPLITUDE_MAX), "V", 0, 1),
                         ("PMT_AMPLITUDE_RESOLUTION", str(config.PMT_AMPLITUDE_RESOLUTION), "V", 0, 2),
                         ("PMT_PERIOD", str(config.PMT_PERIOD / 1e-9), "ns", 1, 0),
                         ("PMT_DELAY", str(config.PMT_DELAY / 1e-9), "ns", 1, 1),
-                        ("PMT_RISE_TIME", str(config.PMT_RISE_TIME / 1e-9), "ns", 2, 0),
+                        ("PMT_RISE_TIME", str(config.PMT_RISE_TIME / 1e-9), "ns", 2, 0, "PMT_LEADING_EDGE"),
                         ("PMT_WIDTH", str(config.PMT_WIDTH / 1e-9), "ns", 2, 1),
-                        ("PMT_FALL_TIME", str(config.PMT_FALL_TIME / 1e-9), "ns", 2, 2),
+                        ("PMT_FALL_TIME", str(config.PMT_FALL_TIME / 1e-9), "ns", 2, 2, "PMT_TRAILING_EDGE"),
                         ("PMT_AMPLITUDE_SAMPLE_NUMBER", str(config.PMT_AMPLITUDE_SAMPLE_NUMBER), "samples", 3, 0)]
 
-    for name, default, unit, row, column in pmt_parameters:
-        parameters[name] = add_parameter(pmt_frame, name, default, unit, row, column)
+    for item in pmt_parameters:
+        name, default, unit, row, column = item[:5]
+        label = item[5] if len(item) > 5 else name
+        parameters[name] = add_parameter(pmt_frame, label, default, unit, row, column)
 
     additional_frame = ttk.LabelFrame(left, text="CFD calibration additional parameters", padding=8)
-    additional_frame.grid(row=1, column=0, sticky="ew", pady=(12, 0))
+    additional_frame.grid(row=2, column=0, sticky="ew", pady=(12, 0))
 
     for column in range(3):
         additional_frame.columnconfigure(column, weight=1)
