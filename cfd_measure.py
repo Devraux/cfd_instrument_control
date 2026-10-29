@@ -80,7 +80,7 @@ def prepare_measurement_files(dac):
 
     for amplitude in amplitudes:
         amplitude_positive = abs(amplitude)
-        amplitude_str = format(amplitude_positive.normalize(), "f").replace(".", "_")
+        amplitude_str = format(amplitude_positive.quantize(Decimal("0.1")), "f").replace(".", "_")
         file_path = cfd_out_dir / f"cfd_{amplitude_str}V.csv"
 
         with file_path.open("w", newline="", encoding="utf-8") as csv_file:
@@ -105,7 +105,7 @@ def prepare_measurement_files(dac):
 
     return output_path, files
 
-def cfd_calibrate(dac_obj, generator_obj, oscilloscope_obj, output_path):
+def cfd_calibrate(dac_obj, generator_obj, oscilloscope_obj, output_path, refresh_console=None):
 
     # Get the calibration folder
     calibration_path = output_path / "calibration"
@@ -139,6 +139,9 @@ def cfd_calibrate(dac_obj, generator_obj, oscilloscope_obj, output_path):
                                                     rise_time=config.PMT_RISE_TIME,
                                                     fall_time=config.PMT_FALL_TIME,
                                                     delay=config.PMT_DELAY)
+            
+            print(f"CFD calibrate, amplitude: {amplitude_value}")
+            time.sleep(config.PMT_SETTLING_TIME)
 
             # Iterate through selected DAC codes.
             for dac_code in range( config.DAC_START_CODE, config.DAC_STOP_CODE + 1, config.DAC_INCREMENT_STEP):
@@ -147,6 +150,7 @@ def cfd_calibrate(dac_obj, generator_obj, oscilloscope_obj, output_path):
                                       channel="CFD_ZERO",
                                       value=dac_code )
 
+                print(f"CFD characterize, dac code: 0x{dac_code}")
                 time.sleep(config.DAC_SETTLING_DELAY)
                 
                 # Perform multiple measurements and calculate their mean.
@@ -173,9 +177,13 @@ def cfd_calibrate(dac_obj, generator_obj, oscilloscope_obj, output_path):
     measurements = [ [results[dac_code][i] for dac_code in dac_codes] for i in range(3)]
     centroid_x, centroid_y = calculate_triangle_centroid( dac_codes, measurements)
 
+    print("########################")
+    print("# Calibration finished #")
+    print("########################")
+
     return centroid_x, centroid_y
 
-def cfd_characterize(dac_obj, generator_obj, oscilloscope_obj,  files,  output_path):
+def cfd_characterize(dac_obj, generator_obj, oscilloscope_obj,  files,  output_path, refresh_console=None):
     
     # Set dac output voltages:
     dac_obj.write_all(0, config.DAC_A, config.DAC_B, config.DAC_C, config.DAC_D)
@@ -194,6 +202,10 @@ def cfd_characterize(dac_obj, generator_obj, oscilloscope_obj,  files,  output_p
                                                 rise_time=config.PMT_RISE_TIME,
                                                 fall_time=config.PMT_FALL_TIME,
                                                 delay=config.PMT_DELAY)
+        
+        print(f"CFD characterize, amplitude: {amplitude_value}")
+
+        time.sleep(config.PMT_SETTLING_TIME)
 
         for j in range(config.PMT_AMPLITUDE_SAMPLE_NUMBER):
             time_interval = oscilloscope_obj.get_time_interval_measurement()
@@ -203,6 +215,10 @@ def cfd_characterize(dac_obj, generator_obj, oscilloscope_obj,  files,  output_p
                 writer.writerow([j + 1, time_interval])
 
             time.sleep(config.PMT_MEASURE_DELAY)
+    
+    print("#############################")
+    print("# Characterization finished #")
+    print("#############################")
 
 def calculate_triangle_centroid(dac_codes, measurements):
     if len(measurements) != 3:

@@ -14,6 +14,8 @@ from instrument_control import gen_cmd
 from instrument_control import scope_cmd
 import measurement_config as config
 from tkinter import messagebox
+import sys
+import queue
 
 # .EXE final version important change
 #DATA_DIR = Path(config.PMT_OUTPUT_DIR).resolve()
@@ -24,7 +26,7 @@ current_session_folder = None
 results_notebook = None
 cfd_zero_calibration_value = (0, 0)
 
-def calibrate_only(parameters, dac_entries):
+def calibrate_only(parameters, dac_entries, refresh_console):
     global cfd_zero_calibration_value
     update_parameters(parameters, dac_entries)
 
@@ -34,7 +36,7 @@ def calibrate_only(parameters, dac_entries):
 
     session_folder, files = cfd_measure.prepare_measurement_files(dac=dac)
     cfd_measure.configure_instruments(dac_obj=dac, generator_obj=generator, oscilloscope_obj=oscilloscope)    
-    cfd_zero_calibration_value = cfd_measure.cfd_calibrate(dac_obj=dac, generator_obj=generator, oscilloscope_obj=oscilloscope, output_path=session_folder)
+    cfd_zero_calibration_value = cfd_measure.cfd_calibrate(dac_obj=dac, generator_obj=generator, oscilloscope_obj=oscilloscope, output_path=session_folder, refresh_console=refresh_console)
     
     cfd_zero_calibration_x = cfd_zero_calibration_value[0]
     config.DAC_C = round(cfd_zero_calibration_x)
@@ -42,7 +44,7 @@ def calibrate_only(parameters, dac_entries):
 
     refresh_result_tabs(session_folder)
 
-def characterize_only(parameters, dac_entries):
+def characterize_only(parameters, dac_entries, refresh_console):
     update_parameters(parameters, dac_entries)
 
     dac = dac8554_api.dac8554_api()
@@ -52,12 +54,12 @@ def characterize_only(parameters, dac_entries):
     session_folder, files = cfd_measure.prepare_measurement_files(dac=dac)
     
     cfd_measure.configure_instruments(dac, generator, oscilloscope)
-    cfd_measure.cfd_characterize(dac_obj=dac, generator_obj=generator, oscilloscope_obj=oscilloscope, output_path=session_folder, files=files)
+    cfd_measure.cfd_characterize(dac_obj=dac, generator_obj=generator, oscilloscope_obj=oscilloscope, output_path=session_folder, files=files, refresh_console=refresh_console)
     cfd_measure.process_measurement_results( files=files, output_path=session_folder)
     
     refresh_result_tabs(session_folder)
 
-def calibrate_and_characterize(parameters, dac_entries):
+def calibrate_and_characterize(parameters, dac_entries, refresh_console):
     global cfd_zero_calibration_value
     update_parameters(parameters, dac_entries)
 
@@ -69,12 +71,12 @@ def calibrate_and_characterize(parameters, dac_entries):
 
     cfd_measure.configure_instruments(dac_obj=dac, generator_obj=generator, oscilloscope_obj=oscilloscope)
     
-    cfd_zero_calibration_value = cfd_measure.cfd_calibrate(dac_obj=dac, generator_obj=generator, oscilloscope_obj=oscilloscope, output_path=session_folder)
+    cfd_zero_calibration_value = cfd_measure.cfd_calibrate(dac_obj=dac, generator_obj=generator, oscilloscope_obj=oscilloscope, output_path=session_folder, refresh_console=refresh_console)
     cfd_zero_calibration_x = cfd_zero_calibration_value[0]
     config.DAC_C = round(cfd_zero_calibration_x)
     update_dac_entry(dac_entries, "DAC_C", config.DAC_C)
 
-    cfd_measure.cfd_characterize(dac_obj=dac, generator_obj=generator, oscilloscope_obj=oscilloscope, output_path=session_folder, files=files)
+    cfd_measure.cfd_characterize(dac_obj=dac, generator_obj=generator, oscilloscope_obj=oscilloscope, output_path=session_folder, files=files, refresh_console=refresh_console)
     cfd_measure.process_measurement_results(files=files, output_path=session_folder)
     
     refresh_result_tabs(session_folder)
@@ -134,6 +136,52 @@ def add_parameter(parent, name, default, unit, row, column):
     
     entry.pack(fill=tk.X, pady=(4, 0))
     return entry
+
+console_queue = queue.Queue()
+original_stdout = sys.stdout
+original_stderr = sys.stderr
+
+def console_write(text):
+    if text:
+        console_queue.put(text)
+
+def update_console(text_widget):
+    messages = []
+
+    while True:
+        try:
+            messages.append(console_queue.get_nowait())
+        except queue.Empty:
+            break
+
+    if messages:
+        text_widget.configure(state="normal")
+        text_widget.insert("end", "".join(messages))
+        text_widget.see("end")
+        text_widget.configure(state="disabled")
+
+def setup_console(text_widget, root):
+    def refresh():
+        update_console(text_widget)
+        root.after(50, refresh)
+
+    class RedirectOutput:
+        def write(self, text):
+            console_write(text)
+            update_console(text_widget)
+            root.update()
+            return len(text)
+
+        def flush(self):
+            pass
+
+        def isatty(self):
+            return False
+
+    sys.stdout = RedirectOutput()
+    sys.stderr = RedirectOutput()
+
+    refresh()
 
 def add_setup_tab(notebook):
     frame = ttk.Frame(notebook, padding=10)
@@ -265,9 +313,26 @@ def add_setup_tab(notebook):
     log_measure_var = tk.BooleanVar(value=config.LOG_MEASURE_ENABLE)
 
     ttk.Checkbutton( options_frame, text="Logarithmic characterization enable", variable=log_measure_var, command=lambda: update_log_measure(log_measure_var), style="TCheckbutton").grid(row=0, column=0, sticky="w", pady=4)
-    ttk.Button(options_frame, text="CFD calibrate only", command=lambda: calibrate_only(parameters, dac_entries)).grid(row=1, column=0, sticky="ew", pady=4)
-    ttk.Button(options_frame, text="CFD characterize only", command=lambda: characterize_only(parameters, dac_entries)).grid(row=2, column=0, sticky="ew", pady=4)
-    ttk.Button(options_frame, text="CFD calibrate and characterize", command=lambda: calibrate_and_characterize(parameters, dac_entries)).grid(row=3, column=0, sticky="ew", pady=4)
+    ttk.Button(options_frame, text="CFD calibrate only", command=lambda: calibrate_only(parameters, dac_entries, refresh_measurement_console)).grid(row=1, column=0, sticky="ew", pady=4)
+    ttk.Button(options_frame, text="CFD characterize only", command=lambda: characterize_only(parameters, dac_entries, refresh_measurement_console)).grid(row=2, column=0, sticky="ew", pady=4)
+    ttk.Button(options_frame, text="CFD calibrate and characterize", command=lambda: calibrate_and_characterize(parameters, dac_entries, refresh_measurement_console)).grid(row=3, column=0, sticky="ew", pady=4)
+    
+    console_frame = ttk.LabelFrame(right, text="Console", padding=5)
+    console_frame.grid(row=2, column=0, sticky="nsew", pady=(10, 0))
+
+    right.rowconfigure(2, weight=1)
+
+    console_text = tk.Text(console_frame, height=30, wrap="word", state="disabled", font=("Consolas", 9))
+    console_scrollbar = ttk.Scrollbar( console_frame, orient="vertical", command=console_text.yview)
+    console_text.configure(yscrollcommand=console_scrollbar.set)
+    console_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+    console_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+    setup_console(console_text, notebook.winfo_toplevel())
+
+    def refresh_measurement_console():
+        update_console(console_text)
+        notebook.winfo_toplevel().update()
 
     return parameters, dac_entries
 
