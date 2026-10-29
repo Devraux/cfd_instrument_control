@@ -127,7 +127,7 @@ def cfd_calibrate(dac_obj, generator_obj, oscilloscope_obj, output_path, refresh
 
         # Store measurements for each DAC code.
         results = {}
-
+        increment_counter = 0
         for amplitude_value in config.PMT_AMPLITUDES:
 
             # Configure the generator for the selected PMT amplitude.
@@ -158,11 +158,16 @@ def cfd_calibrate(dac_obj, generator_obj, oscilloscope_obj, output_path, refresh
 
                 for _ in range(config.DAC_SAMPLES_PER_POINT):
                     time_interval = oscilloscope_obj.get_time_interval_measurement()
+                    
+                    if(time_interval > 1e30):
+                        print(f"Measured too high time counter. Step: {increment_counter}, measured time:{time_interval}")
+                    
                     total_time_interval += time_interval
-
                     time.sleep(config.PMT_MEASURE_DELAY)
+                    increment_counter += 1
 
                 mean_time_interval = (total_time_interval / config.DAC_SAMPLES_PER_POINT)
+                increment_counter = 0
 
                 # Store the mean measurement.
                 if dac_code not in results:
@@ -173,8 +178,9 @@ def cfd_calibrate(dac_obj, generator_obj, oscilloscope_obj, output_path, refresh
         # Write all results to the CSV file.
         for dac_code in range( config.DAC_START_CODE, config.DAC_STOP_CODE + 1, config.DAC_INCREMENT_STEP):
             writer.writerow([dac_code] + results[dac_code])
+
     dac_codes = sorted(results.keys())
-    measurements = [ [results[dac_code][i] for dac_code in dac_codes] for i in range(3)]
+    measurements = [[results[dac_code][i] for dac_code in dac_codes] for i in range(3)]
     centroid_x, centroid_y = calculate_triangle_centroid( dac_codes, measurements)
 
     print("########################")
@@ -189,7 +195,7 @@ def cfd_characterize(dac_obj, generator_obj, oscilloscope_obj,  files,  output_p
     dac_obj.write_all(0, config.DAC_A, config.DAC_B, config.DAC_C, config.DAC_D)
     
     time.sleep(config.DAC_SETTLING_DELAY)
-    
+    increment_counter = 0
     # Measurement loop
     for amplitude in files:
         amplitude_value = float(amplitude)
@@ -209,13 +215,19 @@ def cfd_characterize(dac_obj, generator_obj, oscilloscope_obj,  files,  output_p
 
         for j in range(config.PMT_AMPLITUDE_SAMPLE_NUMBER):
             time_interval = oscilloscope_obj.get_time_interval_measurement()
+            if(time_interval > 1e30):
+                print(f"Measured too high time counter. Step: {increment_counter}, measured time:{time_interval}")
+
 
             with files[amplitude].open("a", newline="", encoding="utf-8") as csv_file:
                 writer = csv.writer(csv_file)
                 writer.writerow([j + 1, time_interval])
 
+            increment_counter += 1
             time.sleep(config.PMT_MEASURE_DELAY)
-    
+
+        increment_counter = 0
+
     print("#############################")
     print("# Characterization finished #")
     print("#############################")
@@ -236,6 +248,7 @@ def calculate_triangle_centroid(dac_codes, measurements):
         return 0.0, 0.0
 
     if not np.all(np.diff(x) > 0):
+        print("error detected")
         order = np.argsort(x)
         x = x[order]
     else:
@@ -320,7 +333,9 @@ def calculate_triangle_centroid(dac_codes, measurements):
 
     for i in range(3):
         for j in range(i + 1, 3):
-            if np.linalg.norm(normalized[i] - normalized[j]) < 1e-6:
+            distance = np.linalg.norm(normalized[i] - normalized[j])
+
+            if distance < 1e-6:
                 return 0.0, 0.0
 
     # Check the triangle area in normalized coordinates.

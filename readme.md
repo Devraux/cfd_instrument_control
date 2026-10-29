@@ -51,6 +51,84 @@ pip install pyvisa pyserial
 ```
 Ensure that the required VISA backend and instrument connections are configured before running the script.
 
+
+CFD calibrate, amplitude: -0.2
+CFD characterize, dac code: 0x45000
+Measured too high time counter. Step: 2, measured time:9.99999e+37
+Measured too high time counter. Step: 24, measured time:9.99999e+37
+Measured too high time counter. Step: 36, measured time:9.99999e+37
+Measured too high time counter. Step: 56, measured time:9.99999e+37
+Measured too high time counter. Step: 60, measured time:9.99999e+37
+CFD characterize, dac code: 0x46000
+Measured too high time counter. Step: 20, measured time:9.99999e+37
+Measured too high time counter. Step: 27, measured time:9.99999e+37
+Measured too high time counter. Step: 43, measured time:9.99999e+37
+Measured too high time counter. Step: 52, measured time:9.99999e+37
+Measured too high time counter. Step: 92, measured time:9.99999e+37
+Measured too high time counter. Step: 95, measured time:9.99999e+37
+CFD characterize, dac code: 0x47000
+Measured too high time counter. Step: 28, measured time:9.99999e+37
+Measured too high time counter. Step: 45, measured time:9.99999e+37
+Measured too high time counter. Step: 69, measured time:9.99999e+37
+CFD characterize, dac code: 0x48000
+Measured too high time counter. Step: 38, measured time:9.99999e+37
+Measured too high time counter. Step: 53, measured time:9.99999e+37
+Measured too high time counter. Step: 87, measured time:9.99999e+37
+CFD characterize, dac code: 0x49000
+Measured too high time counter. Step: 11, measured time:9.99999e+37
+Measured too high time counter. Step: 99, measured time:9.99999e+37
+CFD characterize, dac code: 0x50000
+CFD characterize, dac code: 0x51000
+CFD characterize, dac code: 0x52000
+CFD characterize, dac code: 0x53000
+CFD characterize, dac code: 0x54000
+CFD characterize, dac code: 0x55000
+CFD characterize, dac code: 0x56000
+CFD characterize, dac code: 0x57000
+CFD characterize, dac code: 0x58000
+CFD characterize, dac code: 0x59000
+CFD characterize, dac code: 0x60000
+CFD calibrate, amplitude: -0.4
+CFD characterize, dac code: 0x45000
+CFD characterize, dac code: 0x46000
+CFD characterize, dac code: 0x47000
+CFD characterize, dac code: 0x48000
+CFD characterize, dac code: 0x49000
+CFD characterize, dac code: 0x50000
+CFD characterize, dac code: 0x51000
+CFD characterize, dac code: 0x52000
+CFD characterize, dac code: 0x53000
+CFD characterize, dac code: 0x54000
+CFD characterize, dac code: 0x55000
+CFD characterize, dac code: 0x56000
+CFD characterize, dac code: 0x57000
+CFD characterize, dac code: 0x58000
+CFD characterize, dac code: 0x59000
+CFD characterize, dac code: 0x60000
+CFD calibrate, amplitude: -2.0
+CFD characterize, dac code: 0x45000
+CFD characterize, dac code: 0x46000
+CFD characterize, dac code: 0x47000
+CFD characterize, dac code: 0x48000
+CFD characterize, dac code: 0x49000
+CFD characterize, dac code: 0x50000
+CFD characterize, dac code: 0x51000
+CFD characterize, dac code: 0x52000
+CFD characterize, dac code: 0x53000
+CFD characterize, dac code: 0x54000
+CFD characterize, dac code: 0x55000
+CFD characterize, dac code: 0x56000
+CFD characterize, dac code: 0x57000
+CFD characterize, dac code: 0x58000
+CFD characterize, dac code: 0x59000
+CFD characterize, dac code: 0x60000
+########################
+# Calibration finished #
+########################
+
+
+
+
 python -m venv .venv_build
 .\.venv_build\Scripts\python.exe -m pip install --upgrade pip
 .\.venv_build\Scripts\python.exe -m pip install pyinstaller numpy matplotlib

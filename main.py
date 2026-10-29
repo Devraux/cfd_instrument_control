@@ -26,6 +26,10 @@ current_session_folder = None
 results_notebook = None
 cfd_zero_calibration_value = (0, 0)
 
+console_queue = queue.Queue()
+original_stdout = sys.stdout
+original_stderr = sys.stderr
+
 def calibrate_only(parameters, dac_entries, refresh_console):
     global cfd_zero_calibration_value
     update_parameters(parameters, dac_entries)
@@ -136,10 +140,6 @@ def add_parameter(parent, name, default, unit, row, column):
     
     entry.pack(fill=tk.X, pady=(4, 0))
     return entry
-
-console_queue = queue.Queue()
-original_stdout = sys.stdout
-original_stderr = sys.stderr
 
 def console_write(text):
     if text:
@@ -439,7 +439,7 @@ def read_generic_csv(file_path):
                 try:
                     value = float(data_row[column_index])
 
-                    if np.isfinite(value) and abs(value) < 1e30:
+                    if np.isfinite(value):
                         count += 1
                 except (ValueError, TypeError):
                     continue
@@ -460,7 +460,7 @@ def read_generic_csv(file_path):
                     try:
                         value = float(data_row[column_index])
 
-                        if np.isfinite(value) and abs(value) < 1e30:
+                        if np.isfinite(value):
                             values.append(value)
                     except (ValueError, TypeError):
                         continue
