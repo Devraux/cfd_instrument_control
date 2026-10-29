@@ -51,3 +51,7 @@ pip install pyvisa pyserial
 ```
 Ensure that the required VISA backend and instrument connections are configured before running the script.
 
+python -m venv .venv_build
+.\.venv_build\Scripts\python.exe -m pip install --upgrade pip
+.\.venv_build\Scripts\python.exe -m pip install pyinstaller numpy matplotlib
+.\.venv_build\Scripts\python.exe -m PyInstaller --clean --noconfirm --onedir --name cfd_instrument_control main.py

@@ -147,6 +147,8 @@ def cfd_calibrate(dac_obj, generator_obj, oscilloscope_obj, output_path):
                                       channel="CFD_ZERO",
                                       value=dac_code )
 
+                time.sleep(config.DAC_SETTLING_DELAY)
+                
                 # Perform multiple measurements and calculate their mean.
                 total_time_interval = 0.0
 
@@ -177,6 +179,8 @@ def cfd_characterize(dac_obj, generator_obj, oscilloscope_obj,  files,  output_p
     
     # Set dac output voltages:
     dac_obj.write_all(0, config.DAC_A, config.DAC_B, config.DAC_C, config.DAC_D)
+    
+    time.sleep(config.DAC_SETTLING_DELAY)
     
     # Measurement loop
     for amplitude in files:
