@@ -196,19 +196,6 @@ def add_setup_tab(notebook):
     left.grid(row=0, column=0, sticky="nsew", padx=(0, 10))
     left.columnconfigure(0, weight=1)
 
-    # DAC instance selector
-    dac_instance_frame = ttk.LabelFrame(left, text="DAC instance", padding=8)
-    dac_instance_frame.grid(row=0, column=0, sticky="ew", pady=(0, 12))
-
-    dac_instance_var = tk.StringVar(value=str(config.DAC_INSTANCE))
-    dac_instance_selector = ttk.Combobox(dac_instance_frame, textvariable=dac_instance_var, values=("0", "1", "2"), state="readonly", width=8, justify=tk.CENTER)
-    dac_instance_selector.pack(anchor="w")
-
-    def change_dac_instance(event=None):
-        config.DAC_INSTANCE = int(dac_instance_var.get())
-
-    dac_instance_selector.bind("<<ComboboxSelected>>", change_dac_instance)
-
     pmt_frame = ttk.LabelFrame(left, text="PMT signal parameters", padding=8)
     pmt_frame.grid(row=1, column=0, sticky="ew")
 
@@ -216,8 +203,6 @@ def add_setup_tab(notebook):
         pmt_frame.columnconfigure(column, weight=1)
 
     parameters = {}
-
-    parameters["DAC_INSTANCE"] = dac_instance_var
 
     pmt_parameters = [  ("PMT_AMPLITUDE_MIN", str(config.PMT_AMPLITUDE_MIN), "V", 0, 0),
                         ("PMT_AMPLITUDE_MAX", str(config.PMT_AMPLITUDE_MAX), "V", 0, 1),
@@ -317,14 +302,46 @@ def add_setup_tab(notebook):
         previous_format["value"] = new_format
 
     format_frame = ttk.Frame(dac_frame)
-    format_frame.grid(row=1, column=0, columnspan=4, pady=(10, 2))
+    format_frame.grid(row=1, column=0, columnspan=4, sticky="ew", pady=(10, 2))
 
-    ttk.Label(format_frame, text="Value format:").pack(side=tk.LEFT, padx=(0, 8))
+    format_frame.columnconfigure(0, weight=1)
+    format_frame.columnconfigure(1, weight=1)
+    format_frame.columnconfigure(2, weight=1)
 
-    format_selector = ttk.Combobox(format_frame, textvariable=dac_format_var, values=("HEX", "DEC"), state="readonly", width=8, justify=tk.CENTER)
+    instance_frame = ttk.Frame(format_frame)
+    instance_frame.grid(row=0, column=0, sticky="w")
+
+    ttk.Label(instance_frame, text="DAC set instance:").pack(side=tk.LEFT, padx=(0, 6))
+
+    dac_instance_var = tk.StringVar(value=str(config.DAC_INSTANCE))
+    parameters["DAC_INSTANCE"] = dac_instance_var
+
+    dac_instance_selector = ttk.Combobox( instance_frame, textvariable=dac_instance_var, values=("0", "1", "2"), state="readonly", width=4, justify=tk.CENTER)
+    dac_instance_selector.pack(side=tk.LEFT)
+
+    def on_dac_set():
+        dac = dac8554_api.dac8554_api()
+        config.DAC_INSTANCE = int(dac_instance_var.get())
+
+        for name, entry in dac_entries.items():
+            value = entry.get().strip()
+            config_value = int(value, 16 if config.HEX_FORMAT else 10)
+            setattr(config, name, config_value)
+
+        dac.write_all( config.DAC_INSTANCE, config.DAC_A, config.DAC_B, config.DAC_C, config.DAC_D)
+
+
+    dac_set_button = ttk.Button( format_frame, text="DAC set", command=on_dac_set, padding=(4, 0)) 
+    dac_set_button.grid(row=0, column=1, sticky="n")
+    format_right_frame = ttk.Frame(format_frame)
+    format_right_frame.grid(row=0, column=2, sticky="e")
+
+    ttk.Label(format_right_frame, text="Value format:").pack( side=tk.LEFT, padx=(0, 6))
+
+    format_selector = ttk.Combobox(format_right_frame,textvariable=dac_format_var,values=("HEX", "DEC"),state="readonly",width=6,justify=tk.CENTER)
     format_selector.pack(side=tk.LEFT)
     format_selector.bind("<<ComboboxSelected>>", change_dac_format)
-    
+
     options_frame = ttk.LabelFrame(right, text="Test options", padding=10)
     options_frame.grid(row=1, column=0, sticky="ew", pady=(12, 0))
     options_frame.columnconfigure(0, weight=1)
