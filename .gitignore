@@ -6,3 +6,5 @@ measurements_data/
 EOF
 .vscode/settings.json
 gui_test.py
+requirements.txt
+release/

@@ -18,9 +18,9 @@ import sys
 import queue
 
 # .EXE final version important change
-DATA_DIR = Path(config.PMT_OUTPUT_DIR).resolve()
-DATA_DIR.mkdir(parents=True, exist_ok=True)
-# DATA_DIR = (Path(__file__).resolve().parent / "measurements_data")
+# DATA_DIR = Path(config.PMT_OUTPUT_DIR).resolve()
+# DATA_DIR.mkdir(parents=True, exist_ok=True)
+DATA_DIR = (Path(__file__).resolve().parent / "measurements_data")
 
 current_session_folder = None
 results_notebook = None
@@ -45,6 +45,7 @@ def calibrate_only(parameters, dac_entries, refresh_console):
     cfd_zero_calibration_x = cfd_zero_calibration_value[0]
     config.DAC_C = round(cfd_zero_calibration_x)
     update_dac_entry(dac_entries, "DAC_C", config.DAC_C)
+    dac.write_single(inst=config.DAC_INSTANCE, channel="CFD_ZERO", value=config.DAC_C)
 
     refresh_result_tabs(session_folder)
 
@@ -396,8 +397,9 @@ def find_latest_measurement_folder(data_dir=DATA_DIR):
     return max(folders, key=lambda path: path.stat().st_mtime)
 
 def format_measurement_name(name):
-    match = re.search(r"(\d{2})\.(\d{2})\.(\d{4})_(\d{2})_(\d{2})_(\d{2})$", name)
-
+    match = re.search(
+        r"(\d{2})\.(\d{2})\.(\d{4})_(\d{2})_(\d{2})_(\d{2})$", name)
+    
     if match:
         day, month, year, hour, minute, second = match.groups()
         return f"{day}.{month}.{year} {hour}:{minute}:{second}"

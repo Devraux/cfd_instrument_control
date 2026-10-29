@@ -37,11 +37,9 @@ POINTS_PER_DECADE = 10
 
 HEX_FORMAT = True  # True = HEX, False = DEC
 
-PMT_OUTPUT_DIR = "./measurements_data"
-
 # .EXE final version important change
-if getattr(sys, "frozen", False):
-    APP_DIR = Path(sys.executable).resolve().parent
-else:
-    APP_DIR = Path(__file__).resolve().parent.parent
-PMT_OUTPUT_DIR = str(APP_DIR / "measurements_data")
+# if getattr(sys, "frozen", False):
+#     APP_DIR = Path(sys.executable).resolve().parent
+# else:
+#     APP_DIR = Path(__file__).resolve().parent.parent
+# PMT_OUTPUT_DIR = str(APP_DIR / "measurements_data")
