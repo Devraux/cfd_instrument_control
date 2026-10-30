@@ -259,18 +259,27 @@ def cfd_characterize(dac_obj, generator_obj, oscilloscope_obj,  files,  output_p
 
         time.sleep(config.PMT_SETTLING_TIME)
 
+        
         for j in range(config.PMT_AMPLITUDE_SAMPLE_NUMBER):
-            time_interval = oscilloscope_obj.get_time_interval_measurement()
-            if(time_interval > 1e30):
-                print(f"Measured too high time counter. Step: {increment_counter}, measured time:{time_interval}")
+            while True:
+                time_interval = oscilloscope_obj.get_time_interval_measurement()
 
+                if time_interval > 1e30:
+                    print( f"Measured too high time counter. Step: {increment_counter}, measured time: {time_interval}")
 
-            with files[amplitude].open("a", newline="", encoding="utf-8") as csv_file:
-                writer = csv.writer(csv_file)
-                writer.writerow([j + 1, time_interval])
+                if time_interval < 0:
+                    print( f"Negative time interval measured. Step: {increment_counter}, measured time: {time_interval}. Repeating measurement")
+                    time.sleep(config.PMT_MEASURE_DELAY)
+                    continue
 
-            increment_counter += 1
-            time.sleep(config.PMT_MEASURE_DELAY)
+                with files[amplitude].open("a", newline="", encoding="utf-8") as csv_file:
+                    writer = csv.writer(csv_file)
+                    writer.writerow([j + 1, time_interval])
+
+                increment_counter += 1
+                time.sleep(config.PMT_MEASURE_DELAY)
+
+                break
 
         increment_counter = 0
 
