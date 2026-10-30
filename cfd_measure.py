@@ -67,7 +67,7 @@ def prepare_measurement_files(dac):
     for directory in ( calibration_dir, cfd_out_dir, mean_dir, deviation_dir):
         directory.mkdir(parents=True, exist_ok=False)
 
-    dac_config = dac.read_config()
+    # dac_config = dac.read_config()
 
     amplitude_min = Decimal(str(config.PMT_AMPLITUDE_MIN))
     amplitude_max = Decimal(str(config.PMT_AMPLITUDE_MAX))
@@ -95,11 +95,11 @@ def prepare_measurement_files(dac):
             csv_file.write(f"Measurement time: {now.strftime('%H:%M:%S')}\n")
             csv_file.write("\n")
 
-            csv_file.write("DAC configuration:\n")
-            csv_file.write(dac_config)
+            # csv_file.write("DAC configuration:\n")
+            # csv_file.write(dac_config)
 
-            if not dac_config.endswith("\n"):
-                csv_file.write("\n")
+            # if not dac_config.endswith("\n"):
+            #     csv_file.write("\n")
 
             csv_file.write("\n")
 
@@ -138,7 +138,7 @@ def cfd_calibrate(dac_obj, generator_obj, oscilloscope_obj, output_path, refresh
             # Configure the generator for the selected PMT amplitude.
             amplitude_abs = abs(amplitude_value)
 
-            if config.PMT_POLARITY_INVERT:
+            if config.PMT_POSITIVE_POLARITY:
                 generator_low = 0.0
                 generator_polarity = "NORMAL"
             else:
@@ -207,9 +207,27 @@ def cfd_calibrate(dac_obj, generator_obj, oscilloscope_obj, output_path, refresh
 
 def cfd_characterize(dac_obj, generator_obj, oscilloscope_obj,  files,  output_path, refresh_console=None):
     
-    # Set dac output voltages:
+    #Set dac output voltages:
     dac_obj.write_all(config.DAC_INSTANCE, config.DAC_A, config.DAC_B, config.DAC_C, config.DAC_D)
-    
+
+    #Update headers
+    dac_config = dac_obj.read_config()
+
+    for file_path in files.values():
+        with file_path.open("r", encoding="utf-8") as csv_file:
+            lines = csv_file.readlines()
+
+        with file_path.open("w", newline="", encoding="utf-8") as csv_file:
+            csv_file.write("DAC configuration:\n")
+            csv_file.write(dac_config)
+
+            if not dac_config.endswith("\n"):
+                csv_file.write("\n")
+
+            csv_file.write("\n")
+            csv_file.writelines(lines)
+
+
     time.sleep(config.DAC_SETTLING_DELAY)
     increment_counter = 0
     # Measurement loop
@@ -219,7 +237,7 @@ def cfd_characterize(dac_obj, generator_obj, oscilloscope_obj,  files,  output_p
         # Configure the generator for the selected PMT amplitude.
         amplitude_abs = abs(amplitude_value)
 
-        if config.PMT_POLARITY_INVERT:
+        if config.PMT_POSITIVE_POLARITY:
             generator_low = 0.0
             generator_polarity = "NORMAL"
         else:

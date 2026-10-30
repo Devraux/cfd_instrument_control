@@ -18,9 +18,10 @@ import sys
 import queue
 
 # .EXE final version important change
-# DATA_DIR = Path(config.PMT_OUTPUT_DIR).resolve()
-# DATA_DIR.mkdir(parents=True, exist_ok=True)
-DATA_DIR = (Path(__file__).resolve().parent / "measurements_data")
+DATA_DIR = Path(config.PMT_OUTPUT_DIR).resolve()
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+# DATA_DIR = (Path(__file__).resolve().parent / "measurements_data")
+
 
 current_session_folder = None
 results_notebook = None
@@ -43,10 +44,16 @@ def calibrate_only(parameters, dac_entries, refresh_console):
     cfd_zero_calibration_value = cfd_measure.cfd_calibrate(dac_obj=dac, generator_obj=generator, oscilloscope_obj=oscilloscope, output_path=session_folder, refresh_console=refresh_console)
     
     cfd_zero_calibration_x = cfd_zero_calibration_value[0]
-    config.DAC_C = round(cfd_zero_calibration_x)
-    update_dac_entry(dac_entries, "DAC_C", config.DAC_C)
-    dac.write_single(inst=config.DAC_INSTANCE, channel="CFD_ZERO", value=config.DAC_C)
 
+    if cfd_zero_calibration_x != 0:
+        config.DAC_C = round(cfd_zero_calibration_x)
+        update_dac_entry(dac_entries, "DAC_C", config.DAC_C)
+
+        dac.write_single(
+            inst=config.DAC_INSTANCE,
+            channel="CFD_ZERO",
+            value=config.DAC_C
+        )
     refresh_result_tabs(session_folder)
 
 def characterize_only(parameters, dac_entries, refresh_console):
@@ -221,16 +228,16 @@ def add_setup_tab(notebook):
         parameters[name] = add_parameter(pmt_frame, label, default, unit, row, column)
 
     # PMT polarity invert checkbox
-    pmt_polarity_invert_var = tk.BooleanVar(value=config.PMT_POLARITY_INVERT)
+    PMT_POSITIVE_POLARITY_var = tk.BooleanVar(value=config.PMT_POSITIVE_POLARITY)
 
-    def update_pmt_polarity_invert():
-        config.PMT_POLARITY_INVERT = pmt_polarity_invert_var.get()
+    def update_PMT_POSITIVE_POLARITY():
+        config.PMT_POSITIVE_POLARITY = PMT_POSITIVE_POLARITY_var.get()
 
     polarity_frame = ttk.Frame(pmt_frame)
     polarity_frame.grid( row=0, column=4, sticky="n", padx=3, pady=3)
 
-    ttk.Label( polarity_frame, text="PMT_POLARITY_INVERT", anchor="center").pack(fill=tk.X)
-    ttk.Checkbutton( polarity_frame, variable=pmt_polarity_invert_var, command=update_pmt_polarity_invert).pack(pady=(5, 0))
+    ttk.Label( polarity_frame, text="PMT_POSITIVE_POLARITY", anchor="center").pack(fill=tk.X)
+    ttk.Checkbutton( polarity_frame, variable=PMT_POSITIVE_POLARITY_var, command=update_PMT_POSITIVE_POLARITY).pack(pady=(5, 0))
 
     additional_frame = ttk.LabelFrame(left, text="CFD calibration additional parameters", padding=8)
     additional_frame.grid(row=2, column=0, sticky="ew", pady=(12, 0))
