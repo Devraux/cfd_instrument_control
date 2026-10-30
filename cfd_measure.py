@@ -85,7 +85,7 @@ def prepare_measurement_files(dac):
 
     for amplitude in amplitudes:
         amplitude_positive = abs(amplitude)
-        amplitude_str = format(amplitude_positive.quantize(Decimal("0.1")), "f").replace(".", "_")
+        amplitude_str = format(amplitude_positive.quantize(Decimal("0.001")), "f").replace(".", "_")
         file_path = cfd_out_dir / f"cfd_{amplitude_str}V.csv"
 
         with file_path.open("w", newline="", encoding="utf-8") as csv_file:
