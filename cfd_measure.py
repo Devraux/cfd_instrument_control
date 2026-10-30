@@ -169,18 +169,24 @@ def cfd_calibrate(dac_obj, generator_obj, oscilloscope_obj, output_path, refresh
                 print(f"CFD characterize, dac code: 0x{dac_code}")
                 time.sleep(config.DAC_SETTLING_DELAY)
                 
-                # Perform multiple measurements and calculate their mean.
                 total_time_interval = 0.0
 
-                for _ in range(config.DAC_SAMPLES_PER_POINT):
-                    time_interval = oscilloscope_obj.get_time_interval_measurement()
-                    
-                    if(time_interval > 1e30):
-                        print(f"Measured too high time counter. Step: {increment_counter}, measured time:{time_interval}")
-                    
-                    total_time_interval += time_interval
-                    time.sleep(config.PMT_MEASURE_DELAY)
-                    increment_counter += 1
+                for j in range(config.DAC_SAMPLES_PER_POINT):
+                    while True:
+                        time_interval = oscilloscope_obj.get_time_interval_measurement()
+
+                        if time_interval > 1e30:
+                            print( f"Measured too high time counter. Step: {increment_counter}, " f"measured time: {time_interval}.")
+
+                        if time_interval < 0:
+                            print( f"Negative time interval measured. Step: {increment_counter}, " f"measured time: {time_interval}. Repeating measurement.")
+                            time.sleep(config.PMT_MEASURE_DELAY)
+                            continue
+
+                        total_time_interval += time_interval
+                        increment_counter += 1
+                        time.sleep(config.PMT_MEASURE_DELAY)
+                        break
 
                 mean_time_interval = (total_time_interval / config.DAC_SAMPLES_PER_POINT)
                 increment_counter = 0
