@@ -528,6 +528,7 @@ def read_generic_csv(file_path):
 
     return None, None, None
 
+
 def add_interactive_chart(parent, series, title, x_label, y_label):
     frame = ttk.Frame(parent)
     frame.pack(fill=tk.BOTH, expand=True)
@@ -537,7 +538,7 @@ def add_interactive_chart(parent, series, title, x_label, y_label):
 
     sidebar = ttk.LabelFrame(frame, text=" Manage series ", padding=10)
     sidebar.pack(side=tk.RIGHT, fill=tk.Y, padx=5, pady=5)
-    
+
     headers_frame = ttk.Frame(sidebar)
     headers_frame.pack(fill=tk.X, pady=(0, 5))
 
@@ -548,6 +549,7 @@ def add_interactive_chart(parent, series, title, x_label, y_label):
     ax = fig.add_subplot(111)
 
     log_x_var = tk.BooleanVar(value=False)
+    legend_var = tk.BooleanVar(value=False)
 
     canvas = FigureCanvasTkAgg(fig, master=chart_frame)
     canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
@@ -598,19 +600,37 @@ def add_interactive_chart(parent, series, title, x_label, y_label):
         (0.6350, 0.0780, 0.1840)]
 
     colors = [ chart_colors[i % len(chart_colors)] for i in range(len(series))]
-    
+
+    markers = [
+        "o",   # Circle
+        "s",   # Square
+        "^",   # Triangle up
+        "D",   # Diamond
+        "v",   # Triangle down
+        "P",   # Plus filled
+        "X",   # X filled
+        "*",   # Star
+        "<",   # Triangle left
+        ">",   # Triangle right
+        "h",   # Hexagon
+        "p"    # Pentagon
+    ]
+
     lines = {}
     controls = {}
     current_hover = {"name": None}
+    legend_state = {"last": None}
 
 
     for index, (name, x_values, y_values) in enumerate(series):
         color = colors[index]
+        marker = markers[index % len(markers)]
+
         if name == "CFD zero calibration point":
-            line, = ax.plot(x_values, y_values, color=color, marker="D", markersize=7, markerfacecolor=color, markeredgecolor=color, markeredgewidth=1.0, linestyle="None", label=name, zorder=10)
+            line, = ax.plot(x_values, y_values, color=color, marker=marker, markersize=7, markerfacecolor=color, markeredgecolor=color, markeredgewidth=1.0, linestyle="None", label=name, zorder=10)
         else:
-            line, = ax.plot(x_values, y_values, color=color, alpha=1.0, linewidth=1.2, linestyle="-", marker="o", markersize=3, markerfacecolor=color, markeredgecolor=color, label=name)
-                        
+            line, = ax.plot(x_values, y_values, color=color, alpha=1.0, linewidth=1.2, linestyle="-", marker=marker, markersize=5, markerfacecolor=color, markeredgecolor=color, label=name)
+
         lines[name] = line
 
 
@@ -633,11 +653,79 @@ def add_interactive_chart(parent, series, title, x_label, y_label):
         row.bind("<Leave>", lambda event: clear_hover())
         label.bind("<Enter>", lambda event, n=name: set_hover(n))
 
+    def update_markers():
+        for index, (name, line) in enumerate(lines.items()):
+            if name == "CFD zero calibration point":
+                line.set_marker("D")
+                line.set_markersize(7)
+            elif legend_var.get():
+                line.set_marker(markers[index % len(markers)])
+                line.set_markersize(5)
+            else:
+                line.set_marker("o")
+                line.set_markersize(3)
+
+    def update_legend(force=False):
+
+        if not legend_var.get():
+            state = (False,)
+
+            if force or legend_state["last"] != state:
+                existing_legend = ax.get_legend()
+
+                if existing_legend is not None:
+                    existing_legend.remove()
+
+                legend_state["last"] = state
+
+            return
+
+        visible_names = tuple( name for name in lines if controls[name]["visible"].get())
+        state = (True, visible_names)
+
+        if not force and legend_state["last"] == state:
+            return
+
+        existing_legend = ax.get_legend()
+
+        if existing_legend is not None:
+            existing_legend.remove()
+
+        if visible_names:
+
+            handles = [lines[name] for name in visible_names]
+            labels = list(visible_names)
+
+            ax.legend(
+                handles,
+                labels,
+                loc="best",
+                fontsize=8,
+                ncol=2,
+                frameon=True,
+                framealpha=0.9,
+                edgecolor="#B0B0B0",
+                markerscale=1.2,
+                handlelength=2.0,
+                columnspacing=1.5,
+                labelspacing=0.6
+            )
+
+        legend_state["last"] = state
+
+    def toggle_legend():
+        update_markers()
+        update_legend(force=True)
+        canvas.draw_idle()
+
     log_x_frame = ttk.Frame(sidebar)
     log_x_frame.pack(fill=tk.X, side=tk.BOTTOM, pady=(10, 0))
 
     ttk.Separator(sidebar, orient=tk.HORIZONTAL).pack(side=tk.BOTTOM, fill=tk.X, pady=(8, 0))
+
     ttk.Checkbutton( log_x_frame, text="Logarithmic X-axis", variable=log_x_var, command=toggle_log_x).pack(anchor=tk.W, padx=5, pady=5)
+
+    ttk.Checkbutton( log_x_frame, text="Show legend", variable=legend_var, command=toggle_legend).pack(anchor=tk.W, padx=5, pady=5)
 
     def set_hover(name):
         current_hover["name"] = name
@@ -680,6 +768,7 @@ def add_interactive_chart(parent, series, title, x_label, y_label):
                 item["label"].config(font=("TkDefaultFont", 9, "bold"))
                 item["row"].config(bg=default_bg)
 
+        update_legend()
         canvas.draw_idle()
 
     def on_canvas_hover(event):
@@ -715,6 +804,8 @@ def add_interactive_chart(parent, series, title, x_label, y_label):
             refresh_styles()
 
     canvas.mpl_connect("motion_notify_event", on_canvas_hover)
+
+    update_markers()
     canvas.draw()
     refresh_styles()
 
